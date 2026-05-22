@@ -5333,7 +5333,12 @@ function _latestCompressionReferenceMessage(messages, summaryText=''){
   }
   return {message:null, rawIdx:-1};
 }
+function _isInternalCompressionReferenceText(text){
+  const value=String(text||'').trim();
+  return /^\[?context compaction\b/i.test(value) || /^\[context compaction\s*[—-]\s*reference only\]/i.test(value);
+}
 function _compressionReferenceCardHtml(text, open=false){
+  if(_isInternalCompressionReferenceText(text)) return '';
   const copy=_engineAwareCompressionCopy();
   const preview=text.split(/\n+/).filter(Boolean).slice(0,2).join(' ');
   return `
@@ -5788,9 +5793,12 @@ function renderMessages(options){
   const sessionCompressionAnchorKey=(
     S.session && S.session.compression_anchor_message_key && typeof S.session.compression_anchor_message_key==='object'
   ) ? S.session.compression_anchor_message_key : null;
-  const sessionCompressionSummary=(
+  const rawSessionCompressionSummary=(
     S.session && typeof S.session.compression_anchor_summary==='string'
   ) ? S.session.compression_anchor_summary.trim() : '';
+  const sessionCompressionSummary=_isInternalCompressionReferenceText(rawSessionCompressionSummary)
+    ? ''
+    : rawSessionCompressionSummary;
   const preservedCompressionTaskMessages=_latestPreservedCompressionTaskListMessages(S.messages);
   const vis=S.messages.filter(m=>{
     if(!m||!m.role||m.role==='tool')return false;

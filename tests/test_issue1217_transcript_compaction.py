@@ -9,6 +9,7 @@ from api.streaming import (
     _assistant_reply_added_after_current_turn,
     _context_messages_for_new_turn,
     _dedupe_replayed_active_context,
+    _find_current_user_turn,
     _merge_display_messages_after_agent_result,
     _new_turn_context_from_messages,
     _sanitize_messages_for_api,
@@ -115,6 +116,79 @@ def test_done_payload_messages_are_sanitized_before_client_assignment():
 
     src = Path("api/streaming.py").read_text(encoding="utf-8")
     assert "'messages': sanitize_display_messages(s.messages)" in src
+
+
+def test_current_user_turn_prefers_latest_repeated_prompt_after_compaction():
+    current = "read another three"
+    result_messages = [
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch one"},
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch two"},
+        {
+            "role": "assistant",
+            "content": "[CONTEXT COMPACTION — REFERENCE ONLY] Earlier turns were compacted.",
+        },
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "new batch after compaction"},
+    ]
+
+    assert _find_current_user_turn(result_messages, current) == 5
+
+
+def test_repeated_prompt_after_compaction_appends_only_new_tail():
+    current = "read another three"
+    previous_display = [
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch one"},
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch two"},
+    ]
+    previous_context = [
+        {
+            "role": "assistant",
+            "content": "[CONTEXT COMPACTION — REFERENCE ONLY] Earlier turns were compacted.",
+        },
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch two"},
+    ]
+    result_messages = [
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch one"},
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "old batch two"},
+        {
+            "role": "assistant",
+            "content": "[CONTEXT COMPACTION — REFERENCE ONLY] Earlier turns were compacted.",
+        },
+        {"role": "user", "content": current},
+        {"role": "assistant", "content": "new batch after compaction"},
+    ]
+
+    merged = _merge_display_messages_after_agent_result(
+        previous_display,
+        previous_context,
+        result_messages,
+        current,
+    )
+
+    assert [m["content"] for m in merged] == [
+        current,
+        "old batch one",
+        current,
+        "old batch two",
+        current,
+        "new batch after compaction",
+    ]
+    assert all("CONTEXT COMPACTION" not in m["content"] for m in merged)
+
+
+def test_ui_never_renders_internal_compaction_summary_metadata_as_reference_card():
+    ui_src = Path("static/ui.js").read_text(encoding="utf-8")
+
+    assert "function _isInternalCompressionReferenceText" in ui_src
+    assert "_isInternalCompressionReferenceText(rawSessionCompressionSummary)" in ui_src
+    assert "if(_isInternalCompressionReferenceText(text)) return '';" in ui_src
 
 
 def test_workspace_prefixed_current_user_after_compaction_is_not_duplicated():

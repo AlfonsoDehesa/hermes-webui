@@ -2349,12 +2349,14 @@ def _compression_summary_from_messages(messages):
 def _find_current_user_turn(messages, msg_text):
     needle = " ".join(str(msg_text or '').split())
     fallback = None
+    match = None
     for idx, msg in enumerate(messages or []):
         if not isinstance(msg, dict) or msg.get('role') != 'user':
             continue
         fallback = idx
         if _looks_like_current_user_turn(msg, msg_text):
-            return idx
+            match = idx
+            continue
         text = " ".join(
             _strip_workspace_prefix(
                 _message_text(msg.get('content', '')),
@@ -2362,8 +2364,8 @@ def _find_current_user_turn(messages, msg_text):
             ).split()
         )
         if needle and (needle in text or text in needle):
-            return idx
-    return fallback
+            match = idx
+    return match if match is not None else fallback
 
 
 def _drop_checkpointed_current_user_from_context(messages, msg_text):
