@@ -49,5 +49,8 @@ First-time contributor RFCs should be discussed in an issue before opening a PR.
 - [`canonical-session-resolution.md`](canonical-session-resolution.md) — #2361
   focused contract for resolving URL, query parameter, localStorage, sidebar,
   and compression-lineage session IDs to one canonical visible chat target.
+- [`workspace-identity-contract.md`](workspace-identity-contract.md) — proposed
+  plugin-facing guide and contract for resolving workspace identity from the work
+  location, including git, non-git, and fallback rules.
 - [`turn-journal.md`](turn-journal.md) — Crash-safe WebUI turn journal for
   recovering interrupted chat submissions.

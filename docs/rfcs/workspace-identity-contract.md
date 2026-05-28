@@ -86,7 +86,7 @@ When the work is not inside a git repository:
 - do not derive identity from the agent process folder
 - do not invent a separate configured identity unless the contract is explicitly expanded later
 
-This keeps the identity tied to the project container, not the runtime container.
+This keeps the identity tied to the project container, not the runtime container, and makes it clear that the fallback is a stable prompt label rather than a globally unique key for sibling non-git workspaces.
 
 ### 4. Fallback contract
 

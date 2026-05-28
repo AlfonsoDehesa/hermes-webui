@@ -179,7 +179,8 @@ def resolve_workspace_uid(workspace: str | Path) -> str:
 
     Git-backed work locations use the remote name, preferring ``origin`` when
     multiple remotes exist. Non-git locations fall back to the parent folder
-    name of the project location, then ``root``.
+    name of the project location, then ``root``. The fallback is a prompt-level
+    label, not a globally unique key.
     """
     ws = Path(workspace).expanduser().resolve()
     ctx = resolve_git_context(ws)

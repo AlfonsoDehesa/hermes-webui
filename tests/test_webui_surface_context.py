@@ -8,6 +8,7 @@ def test_webui_ephemeral_prompt_includes_browser_surface_context():
             "source": "webui",
             "session_id": "session-123",
             "profile": "default",
+            "workspace_uid": "origin",
             "workspace": "/tmp/example-workspace",
         },
     )
@@ -17,6 +18,7 @@ def test_webui_ephemeral_prompt_includes_browser_surface_context():
     assert "Source: webui" in prompt
     assert "Session ID: session-123" in prompt
     assert "Profile: default" in prompt
+    assert "Workspace UID: origin" in prompt
     assert "Workspace: /tmp/example-workspace" in prompt
     assert "not the same live transcript as Telegram" in prompt
 
@@ -28,6 +30,7 @@ def test_webui_ephemeral_prompt_skips_empty_surface_fields():
             "source": "webui",
             "session_id": "",
             "profile": None,
+            "workspace_uid": "   ",
             "workspace": "   ",
         },
     )
@@ -36,4 +39,5 @@ def test_webui_ephemeral_prompt_skips_empty_surface_fields():
     assert "Source: webui" in prompt
     assert "Session ID:" not in prompt
     assert "Profile:" not in prompt
+    assert "Workspace UID:" not in prompt
     assert "Workspace:" not in prompt
