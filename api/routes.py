@@ -9268,9 +9268,13 @@ def _handle_chat_sync(handler, body):
                 _context_messages_for_new_turn,
                 _workspace_context_prefix,
             )
+            from api.workspace_git import resolve_workspace_uid
+
             workspace_ctx = _workspace_context_prefix(str(s.workspace))
+            workspace_uid = resolve_workspace_uid(str(s.workspace))
             workspace_system_msg = (
                 f"Active workspace at session start: {s.workspace}\n"
+                f"Workspace UID for this work location: {workspace_uid}\n"
                 "Every user message is prefixed with [Workspace::v1: /absolute/path] indicating the "
                 "workspace the user has selected in the web UI at the time they sent that message. "
                 "This tag is the single authoritative source of the active workspace and updates "

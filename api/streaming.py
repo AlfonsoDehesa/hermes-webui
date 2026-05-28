@@ -221,6 +221,7 @@ def _webui_surface_context_prompt(surface_context: Optional[dict]) -> str:
         ("source", "Source"),
         ("session_id", "Session ID"),
         ("profile", "Profile"),
+        ("workspace_uid", "Workspace UID"),
         ("workspace", "Workspace"),
     )
     for key, label in fields:
@@ -4516,9 +4517,13 @@ def _run_agent_streaming(
 
             # Prepend workspace context so the agent always knows which directory
             # to use for file operations, regardless of session age or AGENTS.md defaults.
+            from api.workspace_git import resolve_workspace_uid
+
             workspace_ctx = _workspace_context_prefix(str(s.workspace))
+            workspace_uid = resolve_workspace_uid(str(s.workspace))
             workspace_system_msg = (
                 f"Active workspace at session start: {s.workspace}\n"
+                f"Workspace UID for this work location: {workspace_uid}\n"
                 "Every user message is prefixed with [Workspace::v1: /absolute/path] indicating the "
                 "workspace the user has selected in the web UI at the time they sent that message. "
                 "This tag is the single authoritative source of the active workspace and updates "
@@ -4556,6 +4561,7 @@ def _run_agent_streaming(
                     'source': 'webui',
                     'session_id': session_id,
                     'profile': getattr(s, 'profile', None),
+                    'workspace_uid': workspace_uid,
                     'workspace': s.workspace,
                 },
             )
