@@ -103,6 +103,34 @@ def test_git_status_non_git_workspace(tmp_path):
     assert git_status(ws) == {"is_git": False}
 
 
+def test_resolve_workspace_uid_prefers_origin_remote(tmp_path):
+    from api.workspace_git import resolve_workspace_uid
+
+    repo = _init_repo(tmp_path / "repo")
+    _git(repo, "remote", "add", "backup", "git@example.invalid:backup/repo.git")
+    _git(repo, "remote", "add", "origin", "git@example.invalid:origin/repo.git")
+
+    assert resolve_workspace_uid(repo) == "origin"
+
+
+def test_resolve_workspace_uid_falls_back_to_repo_name_when_no_remote(tmp_path):
+    from api.workspace_git import resolve_workspace_uid
+
+    repo = _init_repo(tmp_path / "repo")
+
+    assert resolve_workspace_uid(repo) == "repo"
+
+
+def test_resolve_workspace_uid_uses_parent_folder_for_non_git_workspace(tmp_path):
+    from api.workspace_git import resolve_workspace_uid
+
+    project_root = tmp_path / "workspace" / "demo-notes"
+    project_root.mkdir(parents=True)
+
+    assert resolve_workspace_uid(project_root) == "workspace"
+    assert resolve_workspace_uid(pathlib.Path("/")) == "root"
+
+
 def test_git_status_handles_staged_unstaged_untracked_deleted_and_renamed(tmp_path):
     from api.workspace_git import git_status
 

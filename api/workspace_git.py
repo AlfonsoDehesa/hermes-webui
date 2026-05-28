@@ -174,6 +174,27 @@ def resolve_git_context(workspace: str | Path) -> GitContext | None:
     return GitContext(workspace=ws, repo_root=repo_root, workspace_prefix="" if prefix == "." else prefix)
 
 
+def resolve_workspace_uid(workspace: str | Path) -> str:
+    """Return the stable workspace UID for a work location.
+
+    Git-backed work locations use the remote name, preferring ``origin`` when
+    multiple remotes exist. Non-git locations fall back to the parent folder
+    name of the project location, then ``root``.
+    """
+    ws = Path(workspace).expanduser().resolve()
+    ctx = resolve_git_context(ws)
+    if ctx is not None:
+        result = _run_git(ctx, ["remote"], check=False)
+        if result.returncode == 0:
+            remotes = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            if remotes:
+                return "origin" if "origin" in remotes else remotes[0]
+        repo_name = ctx.repo_root.name.strip()
+        return repo_name or "root"
+    parent_name = ws.parent.name.strip()
+    return parent_name or "root"
+
+
 def _workspace_pathspec(ctx: GitContext) -> str:
     return ctx.workspace_prefix or "."
 
